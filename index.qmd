@@ -1,0 +1,433 @@
+---
+title: "Lokigi"
+author:
+    name: Sammi Rosser
+    affiliation: Health Service Modelling Associates Programme
+execute:
+  eval: true # Don't run code by default
+  echo: true # Display code cells by default
+format:
+  live-revealjs:
+    embed-resources: false # necessary for stlite-quarto and chalkboard to work
+    # embed-resources: true # comment in/out as appropriate
+    chalkboard: true
+    output-file: index.html # ensures picked up by github hosting
+    view-distance: 100
+    height: 800 # default height and width ensure consistent behaviour on different screens
+    width: 1250 # would recommend leaving this and height value as they are
+    preview-links: true
+    controls: false
+    controls-layout: edges
+    transition: fade
+    plotly-connected: true
+    background-transition: fade
+    mermaid:
+      theme: neutral
+      format: svg
+    menu:
+        numbers: true
+    preload-iframes: true
+    logo: "assets/hsma_logo.png"
+    footer-logo-link: "https://hsma.co.uk"
+    # background-image: "assets/hsma_bg_1.png"
+    background-image: "assets/banner_hq.png"
+    # background-size: cover
+    theme: [default, custom.scss]
+    title-slide-attributes:
+        data-background-image: assets/banner.png
+    verticator:
+      themetag: 'h1'
+      color: ''
+      inversecolor: ''
+      skipuncounted: false
+      clickable: true
+      position: 'auto'
+      offset: '3vmin'
+      autogenerate: true
+      tooltip: false
+      scale: 1
+    include-in-header:
+      file: resources/header.html
+revealjs-plugins:
+  - verticator
+  - fullscreen
+  - pointer
+  - codefocus
+filters:
+  - stlite # modified stlite extension
+  - reveal-header
+  - bergam0t/value-box
+  - bergam0t/focus-list
+  - code-fullscreen
+  - timeline
+  - cascade
+extensions:
+  iconify:
+    style: "color: #b22222;"
+---
+
+# What is location optimization?
+
+##
+
+::: {.focus-list}
+- If I'm closing one service, which should it be?
+- If I'm adding a new site to an existing service, which of these 5 possible places should I put it?
+- If I'm spinning up a totally new service, how should I distribute my sites?
+:::
+
+# The Current (Python) Landscape
+
+## [spopt](https://pysal.org/spopt/)
+
+<br/>
+
+:::: {.columns}
+
+::: {.column width='50%'}
+### Pros
+
+:::{.focus-list}
+- Part of a wider ecosystem ([pysal]())
+- 350+ github stars
+- 24 contributors (i.e. pretty robust)
+- Quite a lot of documentation...
+:::
+
+:::
+
+::: {.column width='50%'}
+
+:::{.focus-list}
+- ... but the documentation is (imo) quite confusing
+- Not healthcare or UK focussed
+- Linear optimization returns a single option by default
+- Need to manually create your own output plots
+:::
+
+:::
+
+::::
+
+## [HSMA](https://hsma.co.uk/hsma_content/modules/current_module_details/3_geographic_modelling_visualisation.html) and [Open Source Exeter MSc content](https://github.com/health-data-science-OR/healthcare-logistics/tree/master/optimisation)
+
+:::: {.columns}
+
+::: {.column width='50%'}
+### Pros
+
+:::{.focus-list}
+- Returns multiple options
+- Written with UK healthcare in mind
+:::
+
+:::
+
+::: {.column width='50%'}
+
+### Cons
+
+:::{.focus-list}
+- Requires manual copying and adapting of boilerplate code
+- Risk of more errors due to unreviewed code without automated tests
+- Still lots of repetition across organisations
+- Still need to manually create your own plots
+:::
+
+:::
+
+::::
+
+
+## lokigi
+
+Lokigi aims to provide an easy-to-use package to simplify this process.
+
+## Simple Problem Formulation
+
+At its core, you only need a travel matrix.
+
+```{python}
+#| echo: false
+import pandas as pd
+df = pd.read_csv("https://raw.githubusercontent.com/hsma-tools/lokigi/refs/heads/main/sample_data/devon_miu_travel_matrix.csv")
+from IPython.display import HTML
+HTML(df.head(5).to_html(classes="styled-table", index=False))
+```
+
+---
+
+Setting up your problem is easy.
+
+```{python}
+from lokigi.site import SiteProblem
+
+problem = SiteProblem()
+
+problem.add_travel_matrix(
+    travel_matrix_df="https://github.com/hsma-tools/lokigi/blob/main/sample_data/devon_miu_travel_matrix.csv",
+    source_col="from_id",
+    unit="minutes",
+    )
+
+```
+
+
+---
+
+And you can solve it with a single command.
+
+```{python}
+solution = problem.solve(p=4)
+```
+
+<br/>
+
+By default, lokigi will
+
+- brute force the solution
+- assume you want to solve a p-median problem (minimize travel time - weighted by demand if you provide that)
+  - but it also supports p-center (minimizing max travel time) and the Maximal Covering Location Problem (optimizing for being within x distance)
+---
+
+And you can then immediately see a range of metrics for all possible solutions.
+
+```{python}
+#| echo: false
+HTML(solution.show_solutions().to_html(classes="styled-table", index=False))
+```
+
+```{python}
+#| eval: false
+solution.show_solutions()
+```
+
+---
+
+By adding more data, you can plot your solutions too.
+
+```{python}
+problem.add_sites(
+    "https://github.com/hsma-tools/lokigi//blob/main/sample_data/devon_mius.geojson",
+    candidate_id_col="Facility_Name"
+    )
+```
+
+---
+
+```{python}
+problem.show_sites()
+```
+
+---
+
+```{python}
+problem.plot_sites(interactive=True)
+```
+
+---
+
+You can load in easy-to-find LSOA/MSOA/other UK geometry files...
+
+```{python}
+problem.add_region_geometry_layer(
+    "https://github.com/hsma-programme/h6_3c_interactive_plots_travel/raw/main/h6_3c_interactive_plots_travel/example_code/LSOA_2011_Boundaries_Super_Generalised_Clipped_BSC_EW_V4.geojson",
+    common_col="LSOA11NM"
+    )
+```
+
+---
+
+And optionally we can add demand data too if we want to weight our solution.
+
+```{python}
+#| echo: false
+import numpy as np
+demand_df = problem.show_travel_matrix()[["from_id"]].copy()
+np.random.seed(42)
+demand_df["demand"] = np.random.randint(50, 351, size=len(df))
+problem.add_demand(
+    demand_df,
+    demand_col="demand",
+    location_id_col="from_id"
+    )
+```
+
+```{python}
+#| eval: false
+problem.add_demand(
+    "https://github.com/hsma-tools/lokigi/blob/main/sample_data/devon_miu_demand.csv",
+    demand_col="demand",
+    location_id_col="from_id"
+    )
+```
+
+---
+
+We can inspect this data, with joins to all the other data in our problem being handled automatically.
+
+```{python}
+problem.plot_region_geometry_layer(plot_demand=True, interactive=True)
+```
+
+---
+
+We simply solve again!
+
+This time we'll also pass in how many patients we want to be within a given travel time.
+
+```{python}
+solution = problem.solve(p=4, threshold_for_coverage=20)
+```
+
+---
+
+And then we can plot any given solution...
+
+```{python}
+solution.plot_best_combination()
+```
+
+---
+
+As well as the sites people get allocated to
+
+```{python}
+solution.plot_best_combination(plot_site_allocation=True)
+```
+
+---
+
+And the coverage.
+
+```{python}
+solution.plot_best_combination(plot_regions_not_meeting_threshold=True)
+```
+
+---
+
+Or multiple solutions at once.
+
+```{python}
+solution.plot_n_best_combinations(n_best=3)
+```
+
+---
+
+We also get plots like this...
+
+```{python}
+solution.plot_n_best_combinations_bar(n_best=5, interactive=False, static_width=15)
+```
+
+---
+
+And this, helping us to understand tradeoffs.
+
+```{python}
+solution.plot_simple_pareto_front()
+```
+
+## Additional Features - Equity
+
+We recognise that the equity of solutions is important, so there are some early functions to help assess this.
+
+This is designed to work with easily available government equity data.
+
+```{python}
+problem.add_equity_data(
+    "https://github.com/hsma-tools/lokigi/blob/main/sample_data/Index_of_Multiple_Deprivation_(Dec_2015)_Lookup_in_England.csv",
+    equity_col="IMD15",
+    common_col="LSOA11NM",
+    label="Indices of Multiple Deprivation",
+    continuous_measure=True,
+    reverse=False
+    )
+
+solution = problem.solve(p=4, threshold_for_coverage=20)
+```
+
+---
+
+And enables plots like this
+
+```{python}
+solution.check_solution_equity(return_plot=True, interactive=False, colour_mode="above_below_avg");
+```
+
+---
+
+Comparison of equity across multiple solutions
+
+```{python}
+solution.plot_top_n_solution_equity(cols=2, n=4, colour_mode="above_below_avg")
+```
+
+---
+
+And equity maps.
+
+```{python}
+groupings = {
+    "IMD15 Highest Deprivation": [1, 2],
+    "IMD15 Mid-High": [3, 4, 5],
+    "IMD15 Mid-Low": [6, 7, 8],
+    "IMD15 Lowest Deprivation": [9, 10],
+}
+
+solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=7, ncols=4);
+```
+
+
+## Additional Features - Solution Comparison
+
+![](assets\2026-04-29-17-16-38.png)
+
+
+## Other Key Features
+
+:::{.incremental}
+- Sites that must be included in the solution
+- Memory management options for large brute force problems
+- Solvers for problems that are too large to brute force
+- Solution Comparison functions
+:::
+
+
+## Documentation
+
+```{=html}
+<iframe width='780' height='500' src='https://hsma-tools.github.io/lokigi/examples/examples.html' title='Lokigi Documentation'></iframe>
+```
+
+## Potential Roadmap
+
+:::{.incremental}
+- Support for the Location Set Covering Problem (MCLP)
+- Add the ability to set a maximum capacity on any given site
+  - Pseudo-boundary optimization...?
+- Allow **flexible** weighting by multiple factors, not just demand
+- Allow comparing more than 2 solution sets at once
+- Allow setting of costs for different sites
+- More default plots
+- More guidance on creating custom plots
+:::
+
+
+## Open questions
+
+:::{.incremental}
+- How much support/help do we need to provide for travel time matrix generation?
+  - Currently has example in docs, but no helper methods...
+- Is there a 'ready-to-use' report format we could export?
+- Do we need to look at CO2 emissions?
+  - Could basically optimize on it already...
+:::
+
+## Feedback
+
+I'd really welcome your feedback.
+
+Menti:
+
+Or an informal chat!

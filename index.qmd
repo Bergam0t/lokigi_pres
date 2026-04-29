@@ -143,6 +143,10 @@ extensions:
 
 Lokigi aims to provide an easy-to-use package to simplify this process.
 
+The goal is to make it work optimally for UK healthcare contexts.
+
+If it works for other contexts, it's a bonus - not the other way around.
+
 ## Simple Problem Formulation
 
 At its core, you only need a travel matrix.
@@ -188,13 +192,14 @@ By default, lokigi will
 - brute force the solution
 - assume you want to solve a p-median problem (minimize travel time - weighted by demand if you provide that)
   - but it also supports p-center (minimizing max travel time) and the Maximal Covering Location Problem (optimizing for being within x distance)
+
 ---
 
 And you can then immediately see a range of metrics for all possible solutions.
 
 ```{python}
 #| echo: false
-HTML(solution.show_solutions().to_html(classes="styled-table", index=False))
+HTML(solution.show_solutions().head(10).to_html(classes="styled-table", index=False))
 ```
 
 ```{python}
@@ -216,6 +221,12 @@ problem.add_sites(
 ---
 
 ```{python}
+#| echo: false
+HTML(problem.show_sites().head(5).to_html(classes="styled-table", index=False))
+```
+
+```{python}
+#| eval: false
 problem.show_sites()
 ```
 
@@ -381,17 +392,54 @@ solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=7, n
 
 ## Additional Features - Solution Comparison
 
+You can currently also produce a few plots and metrics to compare two solution sets.
+
 ![](assets\2026-04-29-17-16-38.png)
+
+e.g. your current config vs proposed config, car vs public transport, etc.
 
 
 ## Other Key Features
 
-:::{.incremental}
-- Sites that must be included in the solution
-- Memory management options for large brute force problems
-- Solvers for problems that are too large to brute force
-- Solution Comparison functions
+:::: {.columns}
+
+::: {.column width='50%'}
+
+::: {.value-box-simple .bg-light-blue style="font-size: 1.25rem;"}
+Sites that must be included in the solution
 :::
+
+:::
+
+::: {.column width='50%'}
+
+::: {.value-box-simple .bg-light-blue style="font-size: 1.25rem;"}
+Memory management options for large brute force problems
+:::
+
+:::
+
+::::
+
+:::: {.columns}
+
+::: {.column width='50%'}
+
+::: {.value-box-simple .bg-light-blue style="font-size: 1.25rem;"}
+Solvers for problems that are too large to brute force
+:::
+
+:::
+
+::: {.column width='50%'}
+
+::: {.value-box-simple .bg-light-blue style="font-size: 1.25rem;"}
+Solution comparison methods
+:::
+
+:::
+
+::::
 
 
 ## Documentation
@@ -403,7 +451,7 @@ solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=7, n
 ## Potential Roadmap
 
 :::{.incremental}
-- Support for the Location Set Covering Problem (MCLP)
+- Support for the Location Set Covering Problem (LSCP)
 - Add the ability to set a maximum capacity on any given site
   - Pseudo-boundary optimization...?
 - Allow **flexible** weighting by multiple factors, not just demand
@@ -419,15 +467,9 @@ solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=7, n
 :::{.incremental}
 - How much support/help do we need to provide for travel time matrix generation?
   - Currently has example in docs, but no helper methods...
-- Is there a 'ready-to-use' report format we could export?
+- Is there a 'ready-to-use' report format/dashboard we could set up?
 - Do we need to look at CO2 emissions?
   - Could basically optimize on it already...
 :::
 
-## Feedback
-
-I'd really welcome your feedback.
-
-Menti:
-
-Or an informal chat!
+# Discussion

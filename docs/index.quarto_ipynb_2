@@ -1,0 +1,946 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "title: \"Lokigi\"\n",
+        "author:\n",
+        "    name: Sammi Rosser\n",
+        "    affiliation: Health Service Modelling Associates Programme\n",
+        "execute:\n",
+        "  eval: true # Don't run code by default\n",
+        "  echo: true # Display code cells by default\n",
+        "format:\n",
+        "  live-revealjs:\n",
+        "    embed-resources: false # necessary for stlite-quarto and chalkboard to work\n",
+        "    # embed-resources: true # comment in/out as appropriate\n",
+        "    chalkboard: true\n",
+        "    output-file: index.html # ensures picked up by github hosting\n",
+        "    view-distance: 100\n",
+        "    height: 800 # default height and width ensure consistent behaviour on different screens\n",
+        "    width: 1250 # would recommend leaving this and height value as they are\n",
+        "    preview-links: true\n",
+        "    controls: false\n",
+        "    controls-layout: edges\n",
+        "    transition: fade\n",
+        "    plotly-connected: true\n",
+        "    background-transition: fade\n",
+        "    mermaid:\n",
+        "      theme: neutral\n",
+        "      format: svg\n",
+        "    menu:\n",
+        "        numbers: true\n",
+        "    preload-iframes: true\n",
+        "    logo: \"assets/hsma_logo.png\"\n",
+        "    footer-logo-link: \"https://hsma.co.uk\"\n",
+        "    # background-image: \"assets/hsma_bg_1.png\"\n",
+        "    background-image: \"assets/banner_hq.png\"\n",
+        "    # background-size: cover\n",
+        "    theme: [default, custom.scss]\n",
+        "    title-slide-attributes:\n",
+        "        data-background-image: assets/banner.png\n",
+        "    verticator:\n",
+        "      themetag: 'h1'\n",
+        "      color: ''\n",
+        "      inversecolor: ''\n",
+        "      skipuncounted: false\n",
+        "      clickable: true\n",
+        "      position: 'auto'\n",
+        "      offset: '3vmin'\n",
+        "      autogenerate: true\n",
+        "      tooltip: false\n",
+        "      scale: 1\n",
+        "    include-in-header:\n",
+        "      file: resources/header.html\n",
+        "revealjs-plugins:\n",
+        "  - verticator\n",
+        "  - fullscreen\n",
+        "  - pointer\n",
+        "  - codefocus\n",
+        "filters:\n",
+        "  - stlite # modified stlite extension\n",
+        "  - reveal-header\n",
+        "  - bergam0t/value-box\n",
+        "  - bergam0t/focus-list\n",
+        "  - code-fullscreen\n",
+        "  - timeline\n",
+        "  - cascade\n",
+        "extensions:\n",
+        "  iconify:\n",
+        "    style: \"color: #b22222;\"\n",
+        "---\n",
+        "\n",
+        "# Focus of Today\n",
+        "\n",
+        "<br> <br>\n",
+        "\n",
+        ":::: {.columns}\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        ":::{.value-box fragment=\"fade-in\" value=\"NOT trying to teach you everything about location optimization\"}\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        ":::{.value-box fragment=\"fade-in\" value=\"Telling you about this package so you can feed into its development\"}\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::::\n",
+        "\n",
+        "# What is location optimization?\n",
+        "\n",
+        "\n",
+        "##\n",
+        "\n",
+        "::: {.fragment}\n",
+        "\n",
+        "Where should I put my healthcare resources?\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "\n",
+        "::: {.focus-list}\n",
+        "- If I'm closing one service, which should it be?\n",
+        "- If I'm adding a new site to an existing service, which of these 5 possible places should I put it?\n",
+        "- If I'm spinning up a totally new service, how should I distribute my sites?\n",
+        ":::\n",
+        "\n",
+        "# The Current (Python) Landscape\n",
+        "\n",
+        "## [spopt](https://pysal.org/spopt/)\n",
+        "\n",
+        ":::: {.columns}\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "### Pros\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- Part of a wider ecosystem ([pysal](https://pysal.org/) - **P**ython **S**patial **A**nalysis **L**ibrary)\n",
+        "- 350+ github stars\n",
+        "- 24 contributors (i.e. pretty robust)\n",
+        "- Quite a lot of documentation...\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- ... but the documentation is (imo) quite confusing\n",
+        "- Not healthcare or UK focussed\n",
+        "- Linear optimization returns a single option by default\n",
+        "- Need to manually create your own output plots\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::::\n",
+        "\n",
+        "## [HSMA](https://hsma.co.uk/hsma_content/modules/current_module_details/3_geographic_modelling_visualisation.html) and [Open Source Exeter MSc content](https://github.com/health-data-science-OR/healthcare-logistics/tree/master/optimisation)\n",
+        "\n",
+        ":::: {.columns}\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "### Pros\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- Returns multiple options\n",
+        "- Written with UK healthcare in mind\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        "### Cons\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- Requires manual copying and adapting of code\n",
+        "- Still need to manually create your own plots\n",
+        "- Risk of more errors due to unreviewed code without automated tests\n",
+        "- Still lots of repetition across organisations\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::::\n",
+        "\n",
+        "\n",
+        "## lokigi\n",
+        "\n",
+        "Lokigi is a brand new package building on the HSMA and Exeter approach.\n",
+        "\n",
+        "It aims to provide an easy-to-use workflow to simplify and speed up location optimization work.\n",
+        "\n",
+        "## lokigi\n",
+        "\n",
+        "<br>\n",
+        "\n",
+        "<center>\n",
+        "\n",
+        ":::{.value-box align=\"center\" style=\"font-size: 2.75rem;\" value=\"The goal is to make it work optimally for <br> **UK healthcare contexts**\"}\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "<br>\n",
+        "\n",
+        "::: {.fragment}\n",
+        "If it works for other contexts, it's a bonus - not the other way around.\n",
+        ":::\n",
+        "\n",
+        "</center>\n",
+        "\n",
+        "\n",
+        "## Simple Problem Formulation\n",
+        "\n",
+        "At its core, you only need a travel matrix."
+      ],
+      "id": "ff6bf4de"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "import pandas as pd\n",
+        "df = pd.read_csv(\"https://raw.githubusercontent.com/hsma-tools/lokigi/refs/heads/main/sample_data/devon_miu_travel_matrix.csv\")\n",
+        "from IPython.display import HTML\n",
+        "HTML(df.head(3)[[\"from_id\",\"Cumberland Centre (Plymouth)\", \"Dawlish Community Hospital\", \"Derriford Hospital (UTC)\", \"Exmouth Minor Injury Unit\"]].to_html(classes=\"styled-table\", index=False))"
+      ],
+      "id": "3c7b62b7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "\n",
+        "Setting up your problem is easy.\n"
+      ],
+      "id": "156897bd"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "from lokigi.site import SiteProblem\n",
+        "\n",
+        "problem = SiteProblem()\n",
+        "\n",
+        "problem.add_travel_matrix(\n",
+        "    travel_matrix_df=\"path/to/devon_miu_travel_matrix.csv\",\n",
+        "    source_col=\"from_id\",\n",
+        "    unit=\"minutes\",\n",
+        "    )"
+      ],
+      "id": "af334b28",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "from lokigi.site import SiteProblem\n",
+        "\n",
+        "problem = SiteProblem()\n",
+        "\n",
+        "problem.add_travel_matrix(\n",
+        "    travel_matrix_df=\"https://github.com/hsma-tools/lokigi/blob/main/sample_data/devon_miu_travel_matrix.csv\",\n",
+        "    source_col=\"from_id\",\n",
+        "    unit=\"minutes\",\n",
+        "    )"
+      ],
+      "id": "44b25119",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "<br/>\n",
+        "\n",
+        "\n",
+        "::: {.fragment}\n",
+        "\n",
+        "And you can solve it with a single command."
+      ],
+      "id": "83cea10b"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution = problem.solve(p=4)"
+      ],
+      "id": "f9d78247",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "(as it assumes the columns in your travel matrix = your potential sites)\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "---\n",
+        "\n",
+        ":::{.fragment .fade-in-then-semi-out}\n",
+        "By default, lokigi will\n",
+        "\n",
+        "- brute force the solution\n",
+        "- assume you want to solve a p-median problem [(minimize travel time - weighted by demand if you provide that)]{style=\"color:DarkGrey;\"}\n",
+        ":::\n",
+        "\n",
+        "::: {.fragment .fade-in-then-semi-out}\n",
+        "It also supports\n",
+        "\n",
+        "- p-center [(minimizing max travel time)]{style=\"color:DarkGrey;\"}\n",
+        "- the Maximal Covering Location Problem [(given x sites, how to we maximise people within y distance?)]{style=\"color:DarkGrey;\"}\n",
+        ":::\n",
+        "\n",
+        "---\n",
+        "\n",
+        "You can then see a range of metrics for all possible solutions."
+      ],
+      "id": "0d92e6f0"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "solution.show_solutions()"
+      ],
+      "id": "229074f7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "HTML(solution.show_solutions()\n",
+        "  [['solution_rank','site_indices','unweighted_average','90th_percentile','max']]\n",
+        "  .head(4).to_html(classes=\"styled-table\", index=False)\n",
+        "  )"
+      ],
+      "id": "c94da976",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "<br/>\n",
+        "\n",
+        "The full solution table also includes site names and the underlying per-region dataframe for every evaluated combination.\n",
+        "\n",
+        "---\n",
+        "\n",
+        "And we can output plots."
+      ],
+      "id": "ebe65d67"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_n_best_combinations_bar(\n",
+        "  n_best=5, interactive=False, static_width=12, static_height=4.5\n",
+        "  )"
+      ],
+      "id": "b348bd3c",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Adding Sites\n",
+        "\n",
+        "By adding more data, you can plot your solutions too."
+      ],
+      "id": "b16025a4"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "problem.add_sites(\n",
+        "    \"https://github.com/hsma-tools/lokigi/blob/main/sample_data/devon_mius.geojson\",\n",
+        "    candidate_id_col=\"Facility_Name\"\n",
+        "    )"
+      ],
+      "id": "e8efb126",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "HTML(problem.show_sites()[['Facility_Name','Latitude','Longitude']].head(5).to_html(classes=\"styled-table\", index=False))"
+      ],
+      "id": "ac31b8fe",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting Sites  {.no-box}\n"
+      ],
+      "id": "b7bc1bbc"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "problem.plot_sites(interactive=True)"
+      ],
+      "id": "761b0046",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Adding Region Geometry\n",
+        "\n",
+        "You can load in easy-to-find LSOA/MSOA/other UK geometry files..."
+      ],
+      "id": "563e7109"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "problem.add_region_geometry_layer(\n",
+        "    \"LSOA_2011_Boundaries_Super_Generalised_Clipped_BSC_EW_V4.geojson\",\n",
+        "    common_col=\"LSOA11NM\"\n",
+        "    )"
+      ],
+      "id": "eadfdf39",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "problem.add_region_geometry_layer(\n",
+        "    \"https://github.com/hsma-programme/h6_3c_interactive_plots_travel/raw/main/h6_3c_interactive_plots_travel/example_code/LSOA_2011_Boundaries_Super_Generalised_Clipped_BSC_EW_V4.geojson\",\n",
+        "    common_col=\"LSOA11NM\"\n",
+        "    )"
+      ],
+      "id": "51d7e528",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "<br/>\n",
+        "\n",
+        "The [government geoportal (geoportal.statistics.gov.uk/)](https://geoportal.statistics.gov.uk/) has everything you need\n",
+        "\n",
+        "## Adding Demand\n",
+        "\n",
+        "And optionally we can add demand data too if we want to weight our solution."
+      ],
+      "id": "09aa1c89"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "import numpy as np\n",
+        "demand_df = problem.show_travel_matrix()[[\"from_id\"]].copy()\n",
+        "np.random.seed(42)\n",
+        "demand_df[\"demand\"] = np.random.randint(50, 351, size=len(df))\n",
+        "demand_df = demand_df.rename(columns={\"from_id\": \"source\"})\n",
+        "\n",
+        "problem.add_demand(\n",
+        "    demand_df,\n",
+        "    demand_col=\"demand\",\n",
+        "    location_id_col=\"source\"\n",
+        "    )"
+      ],
+      "id": "4338fa67",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "problem.add_demand(\n",
+        "    \"datasets/devon_miu_demand.csv\", # Local files supported too!\n",
+        "    demand_col=\"demand\",\n",
+        "    location_id_col=\"source\"\n",
+        "    )\n",
+        "\n",
+        "problem.show_demand()"
+      ],
+      "id": "d1f0b967",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "HTML(problem.show_demand().head(5).to_html(classes=\"styled-table\", index=False))"
+      ],
+      "id": "b53ef3f5",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting Demand {.no-box}\n",
+        "\n",
+        "We can inspect this data, with joins to all the other data in our problem being handled automatically."
+      ],
+      "id": "c2dbaf23"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "problem.plot_region_geometry_layer(plot_demand=True, interactive=False)"
+      ],
+      "id": "77506062",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Solving with Demand and Coverage Thresholds\n",
+        "\n",
+        "We simply solve again!\n",
+        "\n",
+        "This time we'll also pass in how many regions we want to be within a given travel time."
+      ],
+      "id": "c53e2c02"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution = problem.solve(p=4, threshold_for_coverage=20)"
+      ],
+      "id": "f2b6317b",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "[(enhancements to this coming soon - i.e. counting based on demand/population, not per-region)]{style=\"color:DarkGrey\"}\n",
+        "\n",
+        "## Plotting Solution Maps {.no-box}\n",
+        "\n",
+        "And then we can plot any given solution..."
+      ],
+      "id": "1e18c062"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_best_combination()"
+      ],
+      "id": "1d45f659",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting Solution Maps {.no-box}\n",
+        "\n",
+        "As well as the sites people are nearest to..."
+      ],
+      "id": "f40ab8e5"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_best_combination(plot_site_allocation=True)"
+      ],
+      "id": "e741b38f",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting Solution Maps {.no-box}\n",
+        "\n",
+        "And the coverage."
+      ],
+      "id": "6625c896"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_best_combination(plot_regions_not_meeting_threshold=True)"
+      ],
+      "id": "20852fe5",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting Solution Maps {.no-box}\n",
+        "\n",
+        "Or multiple solutions at once."
+      ],
+      "id": "7165e843"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_n_best_combinations(n_best=3, fig_size_multiplier=5);"
+      ],
+      "id": "d77f2ea7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting Solution Maps {.no-box}\n",
+        "\n",
+        "We also get plots like this, helping us to understand tradeoffs."
+      ],
+      "id": "ab276444"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_simple_pareto_front()"
+      ],
+      "id": "d9905283",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Additional Features - Equity\n",
+        "\n",
+        "We recognise that the equity of solutions is important, so there are some early functions to help assess this.\n",
+        "\n",
+        "This is again designed to work with easily available government equity data from sources like the ONS geoportal again."
+      ],
+      "id": "82b73009"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "problem.add_equity_data(\n",
+        "    \"Index_of_Multiple_Deprivation_(Dec_2015)_Lookup_in_England.csv\",\n",
+        "    equity_col=\"IMD15\",\n",
+        "    common_col=\"LSOA11NM\",\n",
+        "    label=\"Indices of Multiple Deprivation\",\n",
+        "    continuous_measure=True,\n",
+        "    reverse=False\n",
+        "    )\n",
+        "\n",
+        "solution = problem.solve(p=4, threshold_for_coverage=20)"
+      ],
+      "id": "40d51974",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "problem.add_equity_data(\n",
+        "    \"https://github.com/hsma-tools/lokigi/blob/main/sample_data/Index_of_Multiple_Deprivation_(Dec_2015)_Lookup_in_England.csv\",\n",
+        "    equity_col=\"IMD15\",\n",
+        "    common_col=\"LSOA11NM\",\n",
+        "    label=\"Indices of Multiple Deprivation\",\n",
+        "    continuous_measure=True,\n",
+        "    reverse=False\n",
+        "    )\n",
+        "\n",
+        "solution = problem.solve(p=4, threshold_for_coverage=20)"
+      ],
+      "id": "de042a00",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Equity Plots {.no-box}\n",
+        "\n",
+        "And enables plots like this"
+      ],
+      "id": "89c4d84a"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.check_solution_equity(return_plot=True, interactive=False, colour_mode=\"above_below_avg\");"
+      ],
+      "id": "cf8f1bbe",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Equity Plots {.no-box}\n",
+        "\n",
+        "Comparison of equity across multiple solutions"
+      ],
+      "id": "24e335bf"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "solution.plot_top_n_solution_equity(cols=2, n=2, colour_mode=\"above_below_avg\");"
+      ],
+      "id": "878d5659",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Equity Maps {.no-box}\n",
+        "\n",
+        "And equity maps."
+      ],
+      "id": "9f7cfcd5"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "groupings = {\n",
+        "    \"IMD15 Highest Deprivation\": [1, 2, 3], \"IMD15 Mid\": [4, 5, 6, 7],\n",
+        "    \"IMD15 Lowest Deprivation\": [8, 9, 10],\n",
+        "}\n",
+        "solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=5, ncols=3);"
+      ],
+      "id": "20eb7d96",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Other Key Features\n",
+        "\n",
+        ":::: {.columns}\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        "::: {.value-box fragment=\"true\" .bg-light-blue style=\"font-size: 1.75rem;\" align=\"center\"}\n",
+        "Sites that must be included in the solution\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        "::: {.value-box fragment=\"true\" .bg-light-blue style=\"font-size: 1.75rem;\" align=\"center\"}\n",
+        "Memory management options for large brute force problems\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::::\n",
+        "\n",
+        ":::: {.columns}\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        "::: {.value-box fragment=\"true\" .bg-light-blue style=\"font-size: 1.75rem;\" align=\"center\"}\n",
+        "Solvers for problems that are too large to brute force (greedy & GRASP)\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::: {.column width='50%'}\n",
+        "\n",
+        "::: {.value-box fragment=\"true\" .bg-light-blue style=\"font-size: 1.75rem;\" align=\"center\"}\n",
+        "Solution comparison methods for finding the most optimal solution across two solution sets\n",
+        ":::\n",
+        "\n",
+        ":::\n",
+        "\n",
+        "::::\n",
+        "\n",
+        "## Solution Comparison {.no-box}\n",
+        "\n",
+        "You can currently also produce a few plots and metrics to compare two solution sets.\n",
+        "\n",
+        "![](assets\\2026-04-29-17-16-38.png){.lightbox}\n",
+        "\n",
+        "e.g. current config vs proposed, car vs public transport\n",
+        "\n",
+        "\n",
+        "## Documentation\n",
+        "\n",
+        "```{=html}\n",
+        "<iframe width='1000' height='600' src='https://hsma-tools.github.io/lokigi/examples/examples.html' title='Lokigi Documentation'></iframe>\n",
+        "```\n",
+        "\n",
+        "## Potential Roadmap - location - V0.2 {.no-box}\n",
+        "\n",
+        "::: {.timeline .vertical .fragment-slide}\n",
+        "::: {.event data-label=\"v0.2\"}\n",
+        "Set a maximum capacity on any given site (and pseudo-boundary optimization...?)\n",
+        ":::\n",
+        "::: {.event .fragment data-label=\"v0.2\"}\n",
+        "**Flexible** weighting by multiple factors, not just demand\n",
+        ":::\n",
+        "::: {.event .fragment data-label=\"v0.2\"}\n",
+        "Guidance on creating custom plots\n",
+        ":::\n",
+        "::: {.event .fragment data-label=\"v0.2\"}\n",
+        "More tests!!! And improve GRASP implementation.\n",
+        ":::\n",
+        ":::\n",
+        "\n",
+        "## Potential Roadmap - location - Beyond...  {.no-box}\n",
+        "\n",
+        "::: {.timeline .vertical .fragment-slide}\n",
+        "::: {.event .fragment data-label=\"v0.3\"}\n",
+        "Comparing more than 2 solution sets at once\n",
+        ":::\n",
+        "::: {.event .fragment data-label=\"v0.3\"}\n",
+        "Setting of costs per site\n",
+        ":::\n",
+        "::: {.event .fragment data-label=\"v0.4\"}\n",
+        "Support for the Location Set Covering Problem (LSCP) - minimizing facilities to ensure total coverage\n",
+        ":::\n",
+        ":::\n",
+        "\n",
+        "## And Routing...\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- We have a theory that routing has a place in service design questions too\n",
+        "- Day-to-day operational routing is a whole different can of worms\n",
+        "- But we think there's value in being able to answer questions around resourcing services like\n",
+        "  - community nursing\n",
+        "  - community mental health crisis care\n",
+        "  - virtual wards\n",
+        "- And we think we can make it easier than having to go out and learn [Google's OR Tools](https://developers.google.com/optimization)\n",
+        ":::\n",
+        "\n",
+        "\n",
+        "## So it will take things like this...\n",
+        "\n",
+        "![](assets/2026-05-28-12-05-32.png){.lightbox}\n",
+        "\n",
+        "## ... and work out things like this...\n",
+        "\n",
+        "![](assets/2026-05-28-12-02-22.png){.lightbox}\n",
+        "\n",
+        "## ... but for *design* questions\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- Actual historical daily demand\n",
+        "- Simulated demand based on historical data or predicted trends\n",
+        "- Varying start locations, target shift durations, etc.\n",
+        ":::\n",
+        "\n",
+        "# Questions for you...\n",
+        "\n",
+        "## The big questions\n",
+        "\n",
+        "(if you'd rather not shout out or need to go away and think, there is a form!)\n",
+        "\n",
+        ":::{.focus-list}\n",
+        "- Are we providing tools to answer the *right kind of questions?*\n",
+        "- What key features are missing that would stop you from using lokigi in its current state?\n",
+        ":::\n",
+        "\n",
+        "\n",
+        "## And other questions\n",
+        "\n",
+        "- How much support/help do we need to provide for travel time matrix generation? Currently has example in docs, and some helper methods.\n",
+        "\n",
+        ":::{.incremental}\n",
+        "- Is there a 'ready-to-use' report format we could export? Is this useful?\n",
+        "- What about a web-based tool so people don't have to write code?\n",
+        "- Do we need to look at CO2 emissions? (but could basically optimize on it already)\n",
+        ":::\n",
+        "\n",
+        "## Any other feedback?\n",
+        "\n",
+        "Feedback gratefully received here: [https://forms.cloud.microsoft/e/wFjFNN5hgc](https://forms.cloud.microsoft/e/wFjFNN5hgc)"
+      ],
+      "id": "f7871aae"
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3",
+      "language": "python",
+      "display_name": "Python 3 (ipykernel)",
+      "path": "C:\\Users\\Sammi\\AppData\\Roaming\\jupyter\\kernels\\python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}

@@ -66,9 +66,39 @@ extensions:
     style: "color: #b22222;"
 ---
 
+# Focus of Today
+
+<br> <br>
+
+:::: {.columns}
+
+::: {.column width='50%'}
+
+:::{.value-box fragment="fade-in" value="NOT trying to teach you everything about location optimization"}
+:::
+
+:::
+
+::: {.column width='50%'}
+
+:::{.value-box fragment="fade-in" value="Telling you about this package so you can feed into its development"}
+:::
+
+:::
+
+::::
+
 # What is location optimization?
 
+
 ##
+
+::: {.fragment}
+
+Where should I put my healthcare resources?
+
+:::
+
 
 ::: {.focus-list}
 - If I'm closing one service, which should it be?
@@ -79,8 +109,6 @@ extensions:
 # The Current (Python) Landscape
 
 ## [spopt](https://pysal.org/spopt/)
-
-<br/>
 
 :::: {.columns}
 
@@ -145,14 +173,23 @@ Lokigi is a brand new package building on the HSMA and Exeter approach.
 
 It aims to provide an easy-to-use workflow to simplify and speed up location optimization work.
 
+## lokigi
 
-::: {.fragment}
+<br>
 
-The goal is to make it **work optimally for UK healthcare contexts**.
+<center>
 
-If it works for other contexts, it's a bonus - not the other way around.
+:::{.value-box align="center" style="font-size: 2.75rem;" value="The goal is to make it work optimally for <br> **UK healthcare contexts**"}
 
 :::
+
+<br>
+
+::: {.fragment}
+If it works for other contexts, it's a bonus - not the other way around.
+:::
+
+</center>
 
 
 ## Simple Problem Formulation
@@ -164,14 +201,30 @@ At its core, you only need a travel matrix.
 import pandas as pd
 df = pd.read_csv("https://raw.githubusercontent.com/hsma-tools/lokigi/refs/heads/main/sample_data/devon_miu_travel_matrix.csv")
 from IPython.display import HTML
-HTML(df.head(5).to_html(classes="styled-table", index=False))
+HTML(df.head(3)[["from_id","Cumberland Centre (Plymouth)", "Dawlish Community Hospital", "Derriford Hospital (UTC)", "Exmouth Minor Injury Unit"]].to_html(classes="styled-table", index=False))
 ```
 
 ---
 
 Setting up your problem is easy.
 
+
 ```{python}
+#| eval: false
+from lokigi.site import SiteProblem
+
+problem = SiteProblem()
+
+problem.add_travel_matrix(
+    travel_matrix_df="path/to/devon_miu_travel_matrix.csv",
+    source_col="from_id",
+    unit="minutes",
+    )
+
+```
+
+```{python}
+#| echo: false
 from lokigi.site import SiteProblem
 
 problem = SiteProblem()
@@ -186,31 +239,34 @@ problem.add_travel_matrix(
 
 <br/>
 
+
+::: {.fragment}
+
 And you can solve it with a single command.
 
 ```{python}
 solution = problem.solve(p=4)
 ```
 
+(as it assumes the columns in your travel matrix = your potential sites)
+
+:::
+
 ---
 
+:::{.fragment .fade-in-then-semi-out}
 By default, lokigi will
 
 - brute force the solution
-- assume you want to solve a p-median problem (minimize travel time - weighted by demand if you provide that)
+- assume you want to solve a p-median problem [(minimize travel time - weighted by demand if you provide that)]{style="color:DarkGrey;"}
+:::
 
-::: {.fragment}
+::: {.fragment .fade-in-then-semi-out}
 It also supports
 
-- p-center (minimizing max travel time)
-- the Maximal Covering Location Problem (optimizing for being within x distance)
+- p-center [(minimizing max travel time)]{style="color:DarkGrey;"}
+- the Maximal Covering Location Problem [(given x sites, how to we maximise people within y distance?)]{style="color:DarkGrey;"}
 :::
-
-
-::: {.fragment}
-Greedy and GRASP allow solving of problems that are too big to brute force
-:::
-
 
 ---
 
@@ -239,10 +295,12 @@ The full solution table also includes site names and the underlying per-region d
 And we can output plots.
 
 ```{python}
-solution.plot_n_best_combinations_bar(n_best=5, interactive=False, static_width=15)
+solution.plot_n_best_combinations_bar(
+  n_best=5, interactive=False, static_width=12, static_height=4.5
+  )
 ```
 
----
+## Adding Sites
 
 By adding more data, you can plot your solutions too.
 
@@ -258,18 +316,27 @@ problem.add_sites(
 HTML(problem.show_sites()[['Facility_Name','Latitude','Longitude']].head(5).to_html(classes="styled-table", index=False))
 ```
 
----
+## Plotting Sites  {.no-box}
 
 
 ```{python}
 problem.plot_sites(interactive=True)
 ```
 
----
+## Adding Region Geometry
 
 You can load in easy-to-find LSOA/MSOA/other UK geometry files...
 
 ```{python}
+#| eval: false
+problem.add_region_geometry_layer(
+    "LSOA_2011_Boundaries_Super_Generalised_Clipped_BSC_EW_V4.geojson",
+    common_col="LSOA11NM"
+    )
+```
+
+```{python}
+#| echo: false
 problem.add_region_geometry_layer(
     "https://github.com/hsma-programme/h6_3c_interactive_plots_travel/raw/main/h6_3c_interactive_plots_travel/example_code/LSOA_2011_Boundaries_Super_Generalised_Clipped_BSC_EW_V4.geojson",
     common_col="LSOA11NM"
@@ -280,7 +347,7 @@ problem.add_region_geometry_layer(
 
 The [government geoportal (geoportal.statistics.gov.uk/)](https://geoportal.statistics.gov.uk/) has everything you need
 
----
+## Adding Demand
 
 And optionally we can add demand data too if we want to weight our solution.
 
@@ -315,15 +382,15 @@ problem.show_demand()
 HTML(problem.show_demand().head(5).to_html(classes="styled-table", index=False))
 ```
 
----
+## Plotting Demand {.no-box}
 
 We can inspect this data, with joins to all the other data in our problem being handled automatically.
 
 ```{python}
-problem.plot_region_geometry_layer(plot_demand=True, interactive=True)
+problem.plot_region_geometry_layer(plot_demand=True, interactive=False)
 ```
 
----
+## Solving with Demand and Coverage Thresholds
 
 We simply solve again!
 
@@ -333,9 +400,9 @@ This time we'll also pass in how many regions we want to be within a given trave
 solution = problem.solve(p=4, threshold_for_coverage=20)
 ```
 
-(enhancements to this coming soon - i.e. counting based on demand/population, not per-region)
+[(enhancements to this coming soon - i.e. counting based on demand/population, not per-region)]{style="color:DarkGrey"}
 
----
+## Plotting Solution Maps {.no-box}
 
 And then we can plot any given solution...
 
@@ -343,7 +410,7 @@ And then we can plot any given solution...
 solution.plot_best_combination()
 ```
 
----
+## Plotting Solution Maps {.no-box}
 
 As well as the sites people are nearest to...
 
@@ -351,7 +418,7 @@ As well as the sites people are nearest to...
 solution.plot_best_combination(plot_site_allocation=True)
 ```
 
----
+## Plotting Solution Maps {.no-box}
 
 And the coverage.
 
@@ -359,15 +426,15 @@ And the coverage.
 solution.plot_best_combination(plot_regions_not_meeting_threshold=True)
 ```
 
----
+## Plotting Solution Maps {.no-box}
 
 Or multiple solutions at once.
 
 ```{python}
-solution.plot_n_best_combinations(n_best=3);
+solution.plot_n_best_combinations(n_best=3, fig_size_multiplier=5);
 ```
 
----
+## Plotting Solution Maps {.no-box}
 
 We also get plots like this, helping us to understand tradeoffs.
 
@@ -382,6 +449,21 @@ We recognise that the equity of solutions is important, so there are some early 
 This is again designed to work with easily available government equity data from sources like the ONS geoportal again.
 
 ```{python}
+#| eval: false
+problem.add_equity_data(
+    "Index_of_Multiple_Deprivation_(Dec_2015)_Lookup_in_England.csv",
+    equity_col="IMD15",
+    common_col="LSOA11NM",
+    label="Indices of Multiple Deprivation",
+    continuous_measure=True,
+    reverse=False
+    )
+
+solution = problem.solve(p=4, threshold_for_coverage=20)
+```
+
+```{python}
+#| echo: false
 problem.add_equity_data(
     "https://github.com/hsma-tools/lokigi/blob/main/sample_data/Index_of_Multiple_Deprivation_(Dec_2015)_Lookup_in_England.csv",
     equity_col="IMD15",
@@ -394,7 +476,7 @@ problem.add_equity_data(
 solution = problem.solve(p=4, threshold_for_coverage=20)
 ```
 
----
+## Equity Plots {.no-box}
 
 And enables plots like this
 
@@ -402,7 +484,7 @@ And enables plots like this
 solution.check_solution_equity(return_plot=True, interactive=False, colour_mode="above_below_avg");
 ```
 
----
+## Equity Plots {.no-box}
 
 Comparison of equity across multiple solutions
 
@@ -410,7 +492,7 @@ Comparison of equity across multiple solutions
 solution.plot_top_n_solution_equity(cols=2, n=2, colour_mode="above_below_avg");
 ```
 
----
+## Equity Maps {.no-box}
 
 And equity maps.
 
@@ -419,17 +501,8 @@ groupings = {
     "IMD15 Highest Deprivation": [1, 2, 3], "IMD15 Mid": [4, 5, 6, 7],
     "IMD15 Lowest Deprivation": [8, 9, 10],
 }
-solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=7, ncols=3);
+solution.plot_combination_by_equity(groupings=groupings, figsize_multiplier=5, ncols=3);
 ```
-
-
-## Additional Features - Solution Comparison
-
-You can currently also produce a few plots and metrics to compare two solution sets.
-
-![](assets\2026-04-29-17-16-38.png){.lightbox}
-
-e.g. current config vs proposed, car vs public transport
 
 
 ## Other Key Features
@@ -438,7 +511,7 @@ e.g. current config vs proposed, car vs public transport
 
 ::: {.column width='50%'}
 
-::: {.value-box-simple .fragment .bg-light-blue style="font-size: 1.25rem;"}
+::: {.value-box fragment="true" .bg-light-blue style="font-size: 1.75rem;" align="center"}
 Sites that must be included in the solution
 :::
 
@@ -446,7 +519,7 @@ Sites that must be included in the solution
 
 ::: {.column width='50%'}
 
-::: {.value-box-simple .fragment .bg-light-blue style="font-size: 1.25rem;"}
+::: {.value-box fragment="true" .bg-light-blue style="font-size: 1.75rem;" align="center"}
 Memory management options for large brute force problems
 :::
 
@@ -458,21 +531,29 @@ Memory management options for large brute force problems
 
 ::: {.column width='50%'}
 
-::: {.value-box-simple .fragment .bg-light-blue style="font-size: 1.25rem;"}
-Solvers for problems that are too large to brute force
+::: {.value-box fragment="true" .bg-light-blue style="font-size: 1.75rem;" align="center"}
+Solvers for problems that are too large to brute force (greedy & GRASP)
 :::
 
 :::
 
 ::: {.column width='50%'}
 
-::: {.value-box-simple .fragment .bg-light-blue style="font-size: 1.25rem;"}
+::: {.value-box fragment="true" .bg-light-blue style="font-size: 1.75rem;" align="center"}
 Solution comparison methods for finding the most optimal solution across two solution sets
 :::
 
 :::
 
 ::::
+
+## Solution Comparison {.no-box}
+
+You can currently also produce a few plots and metrics to compare two solution sets.
+
+![](assets\2026-04-29-17-16-38.png){.lightbox}
+
+e.g. current config vs proposed, car vs public transport
 
 
 ## Documentation
@@ -481,7 +562,7 @@ Solution comparison methods for finding the most optimal solution across two sol
 <iframe width='1000' height='600' src='https://hsma-tools.github.io/lokigi/examples/examples.html' title='Lokigi Documentation'></iframe>
 ```
 
-## Potential Roadmap - V0.2
+## Potential Roadmap - location - V0.2 {.no-box}
 
 ::: {.timeline .vertical .fragment-slide}
 ::: {.event data-label="v0.2"}
@@ -498,7 +579,7 @@ More tests!!! And improve GRASP implementation.
 :::
 :::
 
-## Potential Roadmap - Beyond...
+## Potential Roadmap - location - Beyond...  {.no-box}
 
 ::: {.timeline .vertical .fragment-slide}
 ::: {.event .fragment data-label="v0.3"}
@@ -508,20 +589,59 @@ Comparing more than 2 solution sets at once
 Setting of costs per site
 :::
 ::: {.event .fragment data-label="v0.4"}
-Support for the Location Set Covering Problem (LSCP)
+Support for the Location Set Covering Problem (LSCP) - minimizing facilities to ensure total coverage
 :::
 :::
 
-## Key questions
+## And Routing...
+
+:::{.focus-list}
+- We have a theory that routing has a place in service design questions too
+- Day-to-day operational routing is a whole different can of worms
+- But we think there's value in being able to answer questions around resourcing services like
+  - community nursing
+  - community mental health crisis care
+  - virtual wards
+- And we think we can make it easier than having to go out and learn [Google's OR Tools](https://developers.google.com/optimization)
+:::
+
+
+## So it will take things like this...
+
+![](assets/2026-05-28-12-05-32.png){.lightbox}
+
+## ... and work out things like this...
+
+![](assets/2026-05-28-12-02-22.png){.lightbox}
+
+## ... but for *design* questions
+
+:::{.focus-list}
+- Actual historical daily demand
+- Simulated demand based on historical data or predicted trends
+- Varying start locations, target shift durations, etc.
+:::
+
+# Questions for you...
+
+## The big questions
+
+(if you'd rather not shout out or need to go away and think, there is a form!)
+
+:::{.focus-list}
+- Are we providing tools to answer the *right kind of questions?*
+- What key features are missing that would stop you from using lokigi in its current state?
+:::
+
+
+## And other questions
+
+- How much support/help do we need to provide for travel time matrix generation? Currently has example in docs, and some helper methods.
 
 :::{.incremental}
-- Does this actually feel useful? Are we providing tools to answer the right kind of questions?
-- What key features are missing that would stop you from using it in its current state?
-- How much support/help do we need to provide for travel time matrix generation? Currently has example in docs, but no helper methods.
 - Is there a 'ready-to-use' report format we could export? Is this useful?
 - What about a web-based tool so people don't have to write code?
 - Do we need to look at CO2 emissions? (but could basically optimize on it already)
-- What else am I missing about these problems on the ground?
 :::
 
 ## Any other feedback?

@@ -1,3 +1,5 @@
+-- Likely inspired by the conversation here: https://github.com/orgs/quarto-dev/discussions/4626
+
 function Div(el)
   if el.classes:includes("focus-list") then
     return pandoc.walk_block(el, {
